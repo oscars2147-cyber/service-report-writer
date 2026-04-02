@@ -1,0 +1,32 @@
+:root {
+  --bg: #111315;
+  --panel: #1a1d21;
+  --panel-2: #22262b;
+  --border: #343a40;
+  --text: #f3f4f6;
+  --muted: #a1a1aa;
+  --accent: #f97316;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: Arial, sans-serif;
+}
+
+.page-shell {
+  padding: 20px;
+}
+
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.main-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
