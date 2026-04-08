@@ -433,4 +433,41 @@ pre {
   justify-content: flex-end;
   gap: 10px;
   margin-bottom: 10px;
+}.refine-toolbar {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+
+.editable-output {
+  width: 100%;
+  min-height: 240px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: rgba(20, 24, 32, 0.55);
+  color: var(--text);
+  padding: 14px;
+  outline: none;
+  resize: vertical;
+  line-height: 1.7;
+  font-size: 0.95rem;
+}
+
+.editable-output:focus {
+  border-color: rgba(249, 115, 22, 0.6);
+  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.12);
+}
+
+.output-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+@media (max-width: 720px) {
+  .refine-toolbar {
+    flex-direction: column;
+  }
 }

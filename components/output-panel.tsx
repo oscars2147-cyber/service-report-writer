@@ -23,8 +23,11 @@ export function OutputPanel({
   const [toast, setToast] = useState("");
   const [displayedText, setDisplayedText] = useState("");
   const [editableReport, setEditableReport] = useState("");
+  const [generatedReport, setGeneratedReport] = useState("");
   const [isTyping, setIsTyping] = useState(false);
+  const [refining, setRefining] = useState(false);
 
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const typeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -50,6 +53,7 @@ export function OutputPanel({
     if (!fullText) {
       setDisplayedText("");
       setEditableReport("");
+      setGeneratedReport("");
       setIsTyping(false);
       return;
     }
@@ -57,6 +61,7 @@ export function OutputPanel({
     let index = 0;
     setDisplayedText("");
     setEditableReport("");
+    setGeneratedReport(fullText);
     setIsTyping(true);
 
     const chunkSize = Math.max(1, Math.ceil(fullText.length / 120));
@@ -70,6 +75,7 @@ export function OutputPanel({
         typeTimerRef.current = setTimeout(typeChunk, 12);
       } else {
         setEditableReport(fullText);
+        setGeneratedReport(fullText);
         setIsTyping(false);
       }
     };
@@ -136,8 +142,79 @@ export function OutputPanel({
     }
   }
 
+  async function refineSelection(mode: "professional" | "shorter" | "direct" | "warranty" = "professional") {
+    const textarea = textareaRef.current;
+
+    if (!textarea) {
+      showToast("Editor not ready");
+      return;
+    }
+
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+
+    if (start === end) {
+      showToast("Highlight text first");
+      return;
+    }
+
+    const selectedText = editableReport.slice(start, end);
+
+    if (!selectedText.trim()) {
+      showToast("Highlight text first");
+      return;
+    }
+
+    setRefining(true);
+
+    try {
+      const res = await fetch("/api/refine-text", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          text: selectedText,
+          mode,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to refine selection.");
+      }
+
+      const refinedText = data.refinedText || selectedText;
+      const updated =
+        editableReport.slice(0, start) +
+        refinedText +
+        editableReport.slice(end);
+
+      setEditableReport(updated);
+      showToast("Selection refined");
+
+      requestAnimationFrame(() => {
+        if (!textareaRef.current) return;
+        textareaRef.current.focus();
+        const newEnd = start + refinedText.length;
+        textareaRef.current.setSelectionRange(start, newEnd);
+      });
+    } catch (err: any) {
+      console.error(err);
+      showToast(err.message || "Refine failed");
+    } finally {
+      setRefining(false);
+    }
+  }
+
   function resetToGenerated() {
-    setEditableReport(fullText || "");
+    if (!generatedReport.trim()) {
+      showToast("Nothing to reset");
+      return;
+    }
+
+    setEditableReport(generatedReport);
     showToast("Report reset");
   }
 
@@ -150,7 +227,7 @@ export function OutputPanel({
           <div>
             <h2>Generated Report</h2>
             <p className="subtle-text">
-              Review, edit, copy, or switch formats.
+              Review, edit, refine selections, copy, or switch formats.
             </p>
           </div>
 
@@ -171,7 +248,7 @@ export function OutputPanel({
                 Copy Report
               </button>
 
-              {!isTyping && !!fullText && (
+              {!isTyping && !!generatedReport && (
                 <button
                   className="button button-secondary micro-lift"
                   onClick={resetToGenerated}
@@ -190,12 +267,53 @@ export function OutputPanel({
                 )}
               </pre>
             ) : (
-              <textarea
-                className="editable-output"
-                value={editableReport}
-                onChange={(e) => setEditableReport(e.target.value)}
-                placeholder="Your report will appear here."
-              />
+              <>
+                <textarea
+                  ref={textareaRef}
+                  className="editable-output"
+                  value={editableReport}
+                  onChange={(e) => setEditableReport(e.target.value)}
+                  placeholder="Your report will appear here."
+                />
+
+                <div className="refine-toolbar">
+                  <button
+                    className="action-button micro-lift"
+                    onClick={() => refineSelection("professional")}
+                    type="button"
+                    disabled={refining}
+                  >
+                    {refining ? "Refining..." : "Refine Selection"}
+                  </button>
+
+                  <button
+                    className="action-button micro-lift"
+                    onClick={() => refineSelection("shorter")}
+                    type="button"
+                    disabled={refining}
+                  >
+                    Shorter
+                  </button>
+
+                  <button
+                    className="action-button micro-lift"
+                    onClick={() => refineSelection("direct")}
+                    type="button"
+                    disabled={refining}
+                  >
+                    More Direct
+                  </button>
+
+                  <button
+                    className="action-button micro-lift"
+                    onClick={() => refineSelection("warranty")}
+                    type="button"
+                    disabled={refining}
+                  >
+                    Warranty Style
+                  </button>
+                </div>
+              </>
             )}
           </div>
 
