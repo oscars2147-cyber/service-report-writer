@@ -12,26 +12,21 @@ export default function HomePage() {
 
   return (
     <main className="app-shell">
-      <div className="bg-overlay" />
       <TopBar />
 
       <section className="dashboard-grid">
-        <div className="glass-panel left-panel">
-          <ReportForm
-            onGenerated={setReport}
-            setNotes={setNotes}
-            setEndingMode={setEndingMode}
-          />
-        </div>
+        <ReportForm
+          onGenerated={setReport}
+          setNotes={setNotes}
+          setEndingMode={setEndingMode}
+        />
 
-        <div className="glass-panel right-panel">
-          <OutputPanel
-            report={report}
-            notes={notes}
-            endingMode={endingMode}
-            setReport={setReport}
-          />
-        </div>
+        <OutputPanel
+          report={report}
+          notes={notes}
+          endingMode={endingMode}
+          setReport={setReport}
+        />
       </section>
     </main>
   );

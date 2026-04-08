@@ -9,7 +9,6 @@ type Props = {
 };
 
 export function ReportForm({ onGenerated, setNotes, setEndingMode }: Props) {
-  const [reportType, setReportType] = useState("full");
   const [endingModeLocal, setEndingModeLocal] = useState("auto");
   const [notesLocal, setNotesLocal] = useState("");
   const [error, setError] = useState("");
@@ -17,9 +16,14 @@ export function ReportForm({ onGenerated, setNotes, setEndingMode }: Props) {
 
   async function generate() {
     setError("");
+
+    if (!notesLocal.trim()) {
+      setError("Please enter your notes first.");
+      return;
+    }
+
     setIsLoading(true);
 
-    // store globally for switching buttons
     setNotes(notesLocal);
     setEndingMode(endingModeLocal);
 
@@ -30,7 +34,7 @@ export function ReportForm({ onGenerated, setNotes, setEndingMode }: Props) {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          reportType,
+          reportType: "full",
           notes: notesLocal,
           endingMode: endingModeLocal,
         }),
@@ -45,6 +49,7 @@ export function ReportForm({ onGenerated, setNotes, setEndingMode }: Props) {
       const data = JSON.parse(text);
       onGenerated(data);
     } catch (err: any) {
+      console.error(err);
       setError(err.message || "Something went wrong.");
     } finally {
       setIsLoading(false);
@@ -52,63 +57,51 @@ export function ReportForm({ onGenerated, setNotes, setEndingMode }: Props) {
   }
 
   return (
-    <section className="panel">
-      <h2>Report Details</h2>
+    <section className="glass-panel left-panel panel-enter">
+      <div className="panel">
+        <div className="section-heading">
+          <h2>Report Details</h2>
+          <p>Set the ending and paste your notes below.</p>
+        </div>
 
-      {/* REPORT TYPE */}
-      <div className="field">
-        <label htmlFor="reportType">Report Type</label>
-        <select
-          id="reportType"
-          value={reportType}
-          onChange={(e) => setReportType(e.target.value)}
-        >
-          <option value="full">Full Report</option>
-          <option value="warranty">Warranty Report (3C)</option>
-        </select>
+        <div className="field field-animate">
+          <label htmlFor="endingMode">Ending</label>
+          <select
+            id="endingMode"
+            value={endingModeLocal}
+            onChange={(e) => setEndingModeLocal(e.target.value)}
+          >
+            <option value="auto">Auto</option>
+            <option value="fixed">Returned to Service</option>
+            <option value="pending">Pending Repair / Parts</option>
+            <option value="monitor">Monitor Condition</option>
+          </select>
+        </div>
+
+        <div className="field field-animate">
+          <label htmlFor="notes">Notes</label>
+          <textarea
+            id="notes"
+            placeholder="Type notes how you normally would… no formatting needed"
+            value={notesLocal}
+            onChange={(e) => setNotesLocal(e.target.value)}
+            className="notes-area"
+          />
+        </div>
+
+        <div className="button-row">
+          <button
+            className="button button-primary micro-lift"
+            onClick={generate}
+            type="button"
+            disabled={isLoading}
+          >
+            {isLoading ? "Generating..." : "Generate Report"}
+          </button>
+        </div>
+
+        {error && <p className="error-text status-fade">{error}</p>}
       </div>
-
-      {/* ENDING */}
-      <div className="field">
-        <label htmlFor="endingMode">Ending</label>
-        <select
-          id="endingMode"
-          value={endingModeLocal}
-          onChange={(e) => setEndingModeLocal(e.target.value)}
-        >
-          <option value="auto">Auto</option>
-          <option value="fixed">Returned to Service</option>
-          <option value="pending">Pending Repair / Parts</option>
-          <option value="monitor">Monitor Condition</option>
-        </select>
-      </div>
-
-      {/* NOTES */}
-      <div className="field">
-        <label htmlFor="notes">Notes / Observations</label>
-        <textarea
-          id="notes"
-          placeholder="Type notes how you normally would… (no formatting needed)"
-          value={notesLocal}
-          onChange={(e) => setNotesLocal(e.target.value)}
-          style={{ width: "100%", minHeight: "220px" }}
-        />
-      </div>
-
-      {/* BUTTON */}
-      <div className="button-row">
-        <button
-          className="button button-primary"
-          onClick={generate}
-          type="button"
-          disabled={isLoading}
-        >
-          {isLoading ? "Generating..." : "Generate Report"}
-        </button>
-      </div>
-
-      {/* ERROR */}
-      {error && <p style={{ color: "red" }}>{error}</p>}
     </section>
   );
 }

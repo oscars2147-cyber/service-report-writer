@@ -2,32 +2,13 @@
 
 export function TopBar() {
   return (
-    <header className="topbar-shell">
+    <header className="topbar-shell topbar-enter">
       <div className="topbar-inner">
-        <div className="topbar-spacer" />
-
-        <div className="topbar-group">
-          <div className="topbar-field">
-            <label className="topbar-label">Property</label>
-            <select className="topbar-select" defaultValue="Morenci">
-              <option>Morenci</option>
-              <option>Safford</option>
-              <option>Sierrita</option>
-              <option>Shop</option>
-            </select>
-          </div>
-
-          <div className="topbar-user">
-            <div className="user-avatar">U</div>
-            <div className="user-meta">
-              <div className="user-name">User</div>
-              <div className="user-role">Technician</div>
-            </div>
-          </div>
-
-          <button className="history-button" type="button">
-            History
-          </button>
+        <div className="topbar-brand">
+          <h1 className="topbar-title">Service Report Writer</h1>
+          <p className="topbar-subtitle">
+            Turn rough field notes into a clean professional report
+          </p>
         </div>
       </div>
     </header>
