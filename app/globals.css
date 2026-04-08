@@ -435,9 +435,34 @@ pre {
   margin-bottom: 10px;
 }.refine-toolbar {
   display: flex;
-  gap: 10px;
+  gap: 8px;
   flex-wrap: wrap;
-  margin-top: 12px;
+  margin-top: 10px;
+}
+
+/* SMALL REFINEMENT BUTTONS */
+.refine-toolbar .action-button {
+  flex: unset;
+  padding: 6px 10px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border);
+  color: var(--muted);
+  min-height: unset;
+  line-height: 1.2;
+}
+
+/* hover */
+.refine-toolbar .action-button:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text);
+}
+
+/* active click feel */
+.refine-toolbar .action-button:active {
+  transform: scale(0.97);
 }
 
 .editable-output {
