@@ -1,34 +1,85 @@
 "use client";
 
-export function OutputPanel({ report }: any) {
+import { useState } from "react";
+
+export function OutputPanel({ report, notes, endingMode, setReport }: any) {
+  const [loading, setLoading] = useState(false);
+
   function copy(text: string) {
     navigator.clipboard.writeText(text || "");
   }
 
-  const soapText = `Complaint: ${report?.soap?.complaint || ""}
-Cause: ${report?.soap?.cause || ""}
-Correction: ${report?.soap?.correction || ""}`;
+  async function regenerate(type: string) {
+    if (!notes) return;
+
+    setLoading(true);
+
+    try {
+      const res = await fetch("/api/generate-report", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          reportType: type,
+          notes,
+          endingMode,
+        }),
+      });
+
+      const data = await res.json();
+      setReport(data);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   return (
     <section className="panel">
-      <h2>Generated Output</h2>
-
-      <div className="output-block">
-        <h3>Full Report</h3>
-        <button onClick={() => copy(report?.full_report || "")}>Copy</button>
-        <pre>{report?.full_report || "Your full report will appear here."}</pre>
+      <div className="report-header-row">
+        <h2>Generated Report</h2>
+        <div className="ready-pill">
+          <span className="ready-dot" />
+          Ready
+        </div>
       </div>
 
-      <div className="output-block">
-        <h3>SOAP / 3C</h3>
-        <button onClick={() => copy(soapText)}>Copy</button>
-        <pre>{soapText}</pre>
-      </div>
+      <div className="report-card">
+        <div className="output-block">
+          <h3>Report Output</h3>
 
-      <div className="output-block">
-        <h3>Short Version</h3>
-        <button onClick={() => copy(report?.short || "")}>Copy</button>
-        <pre>{report?.short || "Your short version will appear here."}</pre>
+          <button
+            className="button button-secondary"
+            onClick={() => copy(report?.full_report || "")}
+          >
+            Copy
+          </button>
+
+          <pre className="output-text">
+            {report?.full_report || "Your report will appear here."}
+          </pre>
+        </div>
+
+        <div className="action-grid">
+          <button
+            className="action-button"
+            onClick={() => regenerate("full")}
+          >
+            Full Summary
+          </button>
+
+
+          <button
+            className="action-button"
+            onClick={() => regenerate("warranty")}
+          >
+            Warranty / 3C
+          </button>
+        </div>
+
+        {loading && <p className="subtle-text">Regenerating...</p>}
       </div>
     </section>
   );

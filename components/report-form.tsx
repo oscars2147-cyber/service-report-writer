@@ -2,25 +2,16 @@
 
 import { useState } from "react";
 
-type ReportResponse = {
-  full_report?: string;
-  soap?: {
-    complaint?: string;
-    cause?: string;
-    correction?: string;
-  };
-  short?: string;
-  error?: string;
+type Props = {
+  onGenerated: (report: any) => void;
+  setNotes: (notes: string) => void;
+  setEndingMode: (mode: string) => void;
 };
 
-export function ReportForm({
-  onGenerated,
-}: {
-  onGenerated: (report: ReportResponse) => void;
-}) {
-  const [mode, setMode] = useState("notes");
-  const [endingMode, setEndingMode] = useState("auto");
-  const [notes, setNotes] = useState("");
+export function ReportForm({ onGenerated, setNotes, setEndingMode }: Props) {
+  const [reportType, setReportType] = useState("full");
+  const [endingModeLocal, setEndingModeLocal] = useState("auto");
+  const [notesLocal, setNotesLocal] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
@@ -28,13 +19,21 @@ export function ReportForm({
     setError("");
     setIsLoading(true);
 
+    // store globally for switching buttons
+    setNotes(notesLocal);
+    setEndingMode(endingModeLocal);
+
     try {
       const res = await fetch("/api/generate-report", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ mode, notes, endingMode }),
+        body: JSON.stringify({
+          reportType,
+          notes: notesLocal,
+          endingMode: endingModeLocal,
+        }),
       });
 
       const text = await res.text();
@@ -43,12 +42,10 @@ export function ReportForm({
         throw new Error(text || "Failed to generate report.");
       }
 
-      const data: ReportResponse = JSON.parse(text);
+      const data = JSON.parse(text);
       onGenerated(data);
-    } catch (err) {
-      const message =
-        err instanceof Error ? err.message : "Something went wrong.";
-      setError(message);
+    } catch (err: any) {
+      setError(err.message || "Something went wrong.");
     } finally {
       setIsLoading(false);
     }
@@ -56,45 +53,49 @@ export function ReportForm({
 
   return (
     <section className="panel">
-      <h2>New Report</h2>
+      <h2>Report Details</h2>
 
+      {/* REPORT TYPE */}
       <div className="field">
-        <label htmlFor="mode">Mode</label>
+        <label htmlFor="reportType">Report Type</label>
         <select
-          id="mode"
-          value={mode}
-          onChange={(e) => setMode(e.target.value)}
+          id="reportType"
+          value={reportType}
+          onChange={(e) => setReportType(e.target.value)}
         >
-          <option value="notes">Scattered Notes Mode</option>
-          <option value="structured">Structured Mode</option>
+          <option value="full">Full Report</option>
+          <option value="warranty">Warranty Report (3C)</option>
         </select>
       </div>
 
+      {/* ENDING */}
       <div className="field">
         <label htmlFor="endingMode">Ending</label>
         <select
           id="endingMode"
-          value={endingMode}
-          onChange={(e) => setEndingMode(e.target.value)}
+          value={endingModeLocal}
+          onChange={(e) => setEndingModeLocal(e.target.value)}
         >
           <option value="auto">Auto</option>
-          <option value="fixed">Fixed / Returned to Service</option>
-          <option value="pending">Pending Repair / Awaiting Parts</option>
-          <option value="monitor">Monitor / Partial Correction</option>
+          <option value="fixed">Returned to Service</option>
+          <option value="pending">Pending Repair / Parts</option>
+          <option value="monitor">Monitor Condition</option>
         </select>
       </div>
 
+      {/* NOTES */}
       <div className="field">
-        <label htmlFor="notes">Notes</label>
+        <label htmlFor="notes">Notes / Observations</label>
         <textarea
           id="notes"
-          placeholder="Enter notes (messy is fine)"
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
+          placeholder="Type notes how you normally would… (no formatting needed)"
+          value={notesLocal}
+          onChange={(e) => setNotesLocal(e.target.value)}
           style={{ width: "100%", minHeight: "220px" }}
         />
       </div>
 
+      {/* BUTTON */}
       <div className="button-row">
         <button
           className="button button-primary"
@@ -102,11 +103,12 @@ export function ReportForm({
           type="button"
           disabled={isLoading}
         >
-          {isLoading ? "Generating..." : "Generate"}
+          {isLoading ? "Generating..." : "Generate Report"}
         </button>
       </div>
 
-      {error ? <p style={{ color: "red" }}>{error}</p> : null}
+      {/* ERROR */}
+      {error && <p style={{ color: "red" }}>{error}</p>}
     </section>
   );
 }
